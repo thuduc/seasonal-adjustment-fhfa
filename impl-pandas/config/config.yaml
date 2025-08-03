@@ -1,0 +1,91 @@
+# Base configuration for FHFA Seasonal Adjustment Pipeline
+
+# Model configurations
+models:
+  arima:
+    ar_order_range: [0, 3]
+    ma_order_range: [0, 3]
+    diff_order_range: [0, 2]
+    seasonal_ar_range: [0, 2]
+    seasonal_ma_range: [0, 2]
+    seasonal_diff_range: [0, 1]
+    outlier_detection: true
+    trading_day_effects: true
+    easter_effects: false
+    
+  panel:
+    entity_effects: true
+    time_effects: false
+    cluster_type: "entity"
+    robust_errors: true
+    
+  quantile:
+    quantiles: [0.1, 0.25, 0.5, 0.75, 0.9]
+    bootstrap_iterations: 100
+    
+  seasonal:
+    methods:
+      - classical
+      - x13
+      - stl
+    default_method: classical
+    
+# Data processing
+data:
+  validation:
+    strict_mode: true
+    fill_missing: true
+    interpolation_method: "linear"
+    outlier_method: "iqr"
+    
+  transformations:
+    log_transform: false
+    standardize: false
+    detrend: false
+    
+# Pipeline settings
+pipeline:
+  stages:
+    - validate
+    - preprocess
+    - seasonal_adjust
+    - impact_analysis
+    - reporting
+    
+  error_handling:
+    continue_on_error: false
+    max_retries: 3
+    retry_delay_seconds: 5
+    
+  checkpoints:
+    enabled: true
+    checkpoint_dir: ".checkpoints"
+    
+# Visualization
+visualization:
+  plot_formats: ["png", "pdf"]
+  dpi: 300
+  style: "seaborn"
+  color_palette: "husl"
+  
+# Reporting
+reporting:
+  formats: ["html", "excel", "json"]
+  include_diagnostics: true
+  include_plots: true
+  executive_summary: true
+  
+# Performance
+performance:
+  batch_size: 100
+  max_workers: 4
+  timeout_seconds: 3600
+  
+# Feature flags
+features:
+  enable_quantile_regression: true
+  enable_weather_analysis: true
+  enable_demographic_analysis: true
+  enable_industry_analysis: true
+  enable_spatial_correlation: false
+  enable_machine_learning: false

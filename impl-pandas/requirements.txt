@@ -1,10 +1,43 @@
-pandas>=1.3.0
-numpy>=1.21.0
-statsmodels>=0.12.0
-scikit-learn>=0.24.0
-scipy>=1.7.0
-joblib>=1.0.0
-pytest>=6.0.0
-pytest-cov>=2.12.0
-matplotlib>=3.4.0
-seaborn>=0.11.0
+# Core data manipulation
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Time series and statistical modeling
+statsmodels>=0.14.0
+scipy>=1.11.0
+scikit-learn>=1.3.0
+
+# Econometrics
+linearmodels>=5.3
+
+# Visualization
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# Utilities
+pydantic>=2.3.0
+click>=8.1.0
+python-dotenv>=1.0.0
+loguru>=0.7.0
+pyyaml>=6.0.0
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+hypothesis>=6.82.0
+memory_profiler>=0.61.0
+
+# Optional performance
+# numba>=0.58.0
+# dask>=2023.8.0
+
+# Data formats
+openpyxl>=3.1.2
+xlrd>=2.0.1
+
+# Reporting
+jinja2>=3.1.0
+xlsxwriter>=3.1.0
+
+# Optional: PDF generation
+# pdfkit>=1.0.0  # Requires wkhtmltopdf system package

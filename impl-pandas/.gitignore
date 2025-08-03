@@ -1,0 +1,84 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# Testing
+.coverage
+.pytest_cache/
+htmlcov/
+.tox/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Data and outputs
+data/raw/*
+data/processed/*
+output/*
+results/*
+*.csv
+*.xlsx
+*.json
+!config/*.json
+!tests/fixtures/*.json
+
+# Logs
+*.log
+logs/
+pipeline.log
+
+# Cache
+.cache/
+.checkpoints/
+.metrics/
+*.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Documentation
+docs/_build/
+docs/api/
+site/
+
+# Build
+build/
+dist/
+*.egg-info/
+wheels/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Temporary
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Keep directories
+!data/.gitkeep
+!output/.gitkeep
+!.cache/.gitkeep

@@ -1,0 +1,42 @@
+# Production configuration overrides
+
+# Stricter validation
+data:
+  validation:
+    strict_mode: true
+    max_missing_rate: 0.1  # More strict in production
+    
+# Production pipeline settings
+pipeline:
+  error_handling:
+    continue_on_error: false
+    alert_on_error: true
+    
+  checkpoints:
+    enabled: true
+    cleanup_after_success: true
+    
+# Production performance settings
+performance:
+  batch_size: 500
+  max_workers: 8
+  memory_limit_gb: 32.0
+  
+# Production logging
+logging:
+  level: "WARNING"
+  structured: true
+  log_to_file: true
+  log_rotation: "daily"
+  
+# Monitoring
+monitoring:
+  enabled: true
+  metrics_export: true
+  health_check_endpoint: "/health"
+  
+# Security
+security:
+  validate_inputs: true
+  sanitize_outputs: true
+  audit_logging: true

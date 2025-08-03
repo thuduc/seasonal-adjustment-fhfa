@@ -1,5 +1,0 @@
-analysis
-data
-models
-output
-utils

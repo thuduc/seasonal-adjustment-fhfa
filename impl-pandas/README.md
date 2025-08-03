@@ -1,34 +1,63 @@
-# Seasonal Adjustment Model for House Price Indices
+# FHFA Seasonal Adjustment Implementation (Pandas)
 
-This project implements a seasonal adjustment model for house price indices using the X-13ARIMA-SEATS methodology, developed with pandas and numpy.
+This is the Pandas-based implementation of the FHFA seasonal adjustment methodology for housing price indices, based on the FHFA whitepaper "Applying Seasonal Adjustments to Housing Markets".
 
 ## Overview
 
-The model performs seasonal adjustment on house price index (HPI) data to:
-- Remove seasonal patterns from time series data
-- Identify and handle outliers
-- Analyze causation factors including weather and demographic impacts
-- Provide comprehensive diagnostics and validation
+This pipeline implements:
+- **RegARIMA models** for time series decomposition
+- **X-13ARIMA-SEATS** seasonal adjustment methodology
+- **Panel regression models** with fixed/random effects for impact analysis
+- **Quantile regression** for distributional analysis
+- **Comprehensive visualization and reporting** functionality
 
-### Key Features
+## Features
 
-- **X-13ARIMA-SEATS Implementation**: Core seasonal adjustment engine
-- **Automatic Model Selection**: Intelligently selects optimal ARIMA parameters
-- **Outlier Detection**: Uses Modified Z-score with Median Absolute Deviation (MAD)
-- **Causation Analysis**: Analyzes weather and demographic impacts on seasonality
-- **Parallel Processing**: Efficiently processes multiple geographies
-- **Comprehensive Testing**: 100% test coverage with unit and integration tests
+### Phase 1: Core Infrastructure ✅
+- Data loaders for HPI, weather, and demographic data
+- Time series and panel data validators
+- Data preprocessing and transformation utilities
+- Configuration management with Pydantic v2
+
+### Phase 2: Model Implementation ✅
+- RegARIMA implementation with seasonal components
+- X-13ARIMA wrapper (placeholder for actual X-13 integration)
+- Panel regression models with entity/time effects
+- Quantile regression for multiple quantiles
+- Seasonal adjustment orchestrator
+
+### Phase 3: Visualization & Reporting ✅
+- Interactive plots for seasonal adjustment results
+- Diagnostic visualizations for model validation
+- HTML/Excel/JSON report generation
+- Enhanced pipeline orchestration
+
+### Phase 4: Testing Framework ✅
+- Property-based testing with Hypothesis
+- Performance benchmarks and profiling
+- Comprehensive test data generators
+- 64% test coverage (exceeds 60% target)
+
+### Phase 5: Production Features ✅
+- CLI interface with Click
+- Environment-based configuration
+- Structured logging and monitoring
+- Docker containerization
+- Resource usage tracking
 
 ## Installation
 
+### Local Installation
+
 1. Clone the repository:
 ```bash
+git clone <repository-url>
 cd impl-pandas
 ```
 
-2. Create and activate a virtual environment:
+2. Create a virtual environment:
 ```bash
-python3 -m venv venv
+python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
@@ -37,193 +66,229 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-## Project Structure
-
-```
-impl-pandas/
-├── src/
-│   ├── data/              # Data loading and validation
-│   ├── models/            # Core adjustment models
-│   ├── analysis/          # Causation and feature analysis
-│   ├── output/            # Results management and reporting
-│   └── utils/             # Caching and parallel processing
-├── tests/
-│   ├── unit/              # Unit tests
-│   └── integration/       # End-to-end tests
-├── data/                  # Pre-generated sample data
-└── scripts/               # Utility scripts
+4. Configure environment:
+```bash
+cp .env.example .env
+# Edit .env with your settings
 ```
 
-## Usage
+5. (Optional) Install X-13ARIMA-SEATS binary for advanced seasonal adjustment
 
-### Running the Seasonal Adjustment Model
+### Docker Installation
+
+1. Build the Docker image:
+```bash
+docker build -t fhfa-seasonal-adjustment .
+```
+
+2. Run with docker-compose:
+```bash
+docker-compose up fhfa-pipeline
+```
+
+3. Or run standalone:
+```bash
+docker run -v $(pwd)/data:/app/data -v $(pwd)/output:/app/output fhfa-seasonal-adjustment python main.py
+
+## Quick Start
+
+### Using the CLI
+
+Run with synthetic data:
+```bash
+python main.py
+```
+
+Run with your own data:
+```bash
+python main.py --hpi-data data/hpi.csv --weather-data data/weather.csv
+```
+
+Run adjustment only:
+```bash
+python main.py --mode adjustment-only
+```
+
+Generate different report formats:
+```bash
+python main.py --report-formats html excel json
+```
+
+### Monitoring and Metrics
+
+Enable resource monitoring:
+```bash
+python main.py --enable-monitoring --metrics-export metrics.json
+```
+
+View metrics dashboard:
+```bash
+docker-compose up metrics-viewer
+# Access at http://localhost:3000
+```
+
+### Using the API
 
 ```python
-from src.data.data_loader import DataLoader
-from src.models.pipeline import SeasonalAdjustmentPipeline
-
-# Load data
-loader = DataLoader()
-hpi_data = loader.load_hpi_data('path/to/hpi_data.csv')
+from src.pipeline.orchestrator import SeasonalAdjustmentPipeline
 
 # Initialize pipeline
 pipeline = SeasonalAdjustmentPipeline()
 
-# Process single geography
-result = pipeline.process_geography('CA', hpi_data)
+# Run full pipeline
+results = pipeline.run_full_pipeline(
+    hpi_data_path="data/hpi.csv",
+    weather_data_path="data/weather.csv",
+    output_dir="./output",
+    generate_report=True,
+    report_formats=['html', 'excel']
+)
 
-# Process multiple geographies in parallel
-geography_ids = ['CA', 'NY', 'TX', 'FL']
-summary = pipeline.batch_process(geography_ids, hpi_data, n_jobs=4)
-
-# Export results
-pipeline.export_results('output/')
+# Get summary
+print(pipeline.get_summary_report())
 ```
 
-### Data Requirements
+## Model Specifications
 
-Input data should be CSV files with the following formats:
+### RegARIMA Model
+The core model follows the specification:
 
-**HPI Data** (required):
-- `geography_id`: Geographic identifier
-- `geography_type`: Type (STATE, MSA, etc.)
-- `period`: Date in quarterly format
-- `nsa_index`: Non-seasonally adjusted index
-- `num_transactions`: Number of transactions
+```
+φ(B)Φ(Bs)(1 - B)^d(yt - Σ βixit) = θ(B)Θ(Bs)εt
+```
 
-**Weather Data** (optional):
-- `geography_id`: Geographic identifier
-- `period`: Date matching HPI data
-- `temp_range`: Temperature range
-- `avg_temp`: Average temperature
-- `precipitation`: Precipitation amount
+Where:
+- φ(B): AR polynomial
+- Φ(Bs): Seasonal AR polynomial  
+- θ(B): MA polynomial
+- Θ(Bs): Seasonal MA polynomial
+- d: Differencing order
+- xit: Exogenous variables
 
-## Running Tests
+### Panel Regression Model
+```
+Yit = α + βXit + γZi + δt + εit
+```
 
-### Quick Test Run
+With temperature coefficients by quarter:
+- Q1: 0.011
+- Q2: 0.014
+- Q3: 0.027
+- Q4: -0.018
+
+## Output Structure
+
+```
+output/
+├── adjusted_series.csv          # Seasonally adjusted series
+├── fixed_effects_coefficients.csv   # Panel regression results
+├── quantile_coefficients.csv    # Quantile regression results
+├── diagnostics.json             # Model diagnostics
+├── full_results.json            # Complete results
+├── seasonal_adjustment_report_YYYYMMDD_HHMMSS.html
+└── seasonal_adjustment_results_YYYYMMDD_HHMMSS.xlsx
+```
+
+## Advanced Usage
+
+### Custom Seasonal Adjustment
+
+```python
+from src.models.seasonal.adjuster import SeasonalAdjuster
+
+# Create adjuster
+adjuster = SeasonalAdjuster(
+    method='classical',
+    outlier_detection=True,
+    forecast_years=1
+)
+
+# Run adjustment
+adjusted = adjuster.adjust(series, frequency=4)
+
+# Get diagnostics
+results = adjuster.get_results()
+```
+
+### Panel Regression Analysis
+
+```python
+from src.models.regression.panel import SeasonalityImpactModel
+
+# Create model
+model = SeasonalityImpactModel(
+    model_type='fixed_effects',
+    entity_effects=True,
+    time_effects=True
+)
+
+# Fit model
+model.fit(
+    panel_data,
+    y_col='hpi_growth',
+    weather_col='temperature',
+    entity_col='cbsa',
+    time_col='date'
+)
+
+# Get results
+coefficients = model.get_coefficients()
+```
+
+## Data Requirements
+
+### HPI Data
+- CSV format with date index
+- Columns: `hpi_state_XX` or `hpi_cbsa_XXXXX`
+- Quarterly or monthly frequency
+
+### Weather Data
+- Temperature, precipitation, and other weather variables
+- Matched to geographic identifiers
+
+### Demographic Data
+- Population, income, industry shares
+- Annual frequency, matched to geographic areas
+
+## Testing
+
+Run all tests:
 ```bash
-# Run all tests with pre-generated data (faster)
 pytest
-
-# Run with coverage report
-pytest --cov=src --cov-report=html
-
-# Run specific test file
-pytest tests/unit/test_x13_engine.py
 ```
 
-### Test Configuration
-
-Tests use pre-generated sample data by default for faster execution. You can control this:
-
+Run with coverage:
 ```bash
-# Use fresh data for each test run
-USE_GENERATED_DATA=false pytest
-
-# Regenerate sample data
-python generate_sample_data.py
+pytest --cov=src --cov-report=term-missing
 ```
 
-### Test Coverage
-
-Current test coverage: **100%** (72/72 tests passing)
-
-- Unit tests cover individual components
-- Integration tests verify end-to-end workflows
-- Performance benchmarks ensure efficiency
-
-## Model Components
-
-### 1. X-13ARIMA Engine (`src/models/x13_engine.py`)
-- Pre-adjustment for trading day effects
-- Outlier detection and interpolation
-- ARIMA model fitting
-- Seasonal factor extraction
-- Diagnostic tests (Ljung-Box, Jarque-Bera, ADF)
-
-### 2. Model Selection (`src/models/model_selection.py`)
-- Automatic ARIMA order determination
-- Grid search optimization
-- Cross-validation
-- Model comparison (AIC/BIC)
-
-### 3. Causation Analysis (`src/analysis/causation_analysis.py`)
-- Weather impact quantification
-- Demographic effects analysis
-- Geographic pattern detection
-- OLS and quantile regression
-
-### 4. Feature Engineering (`src/analysis/feature_engineering.py`)
-- Seasonal dummy variables
-- Weather features (extremes, volatility)
-- Time trends
-- Market indicators
-
-## Performance
-
-- Single geography processing: < 3 seconds
-- Batch processing: Scales linearly with parallel cores
-- Memory efficient: Handles large datasets
-- Caching support for repeated analyses
+Current test coverage: **64%** (exceeds 60% target)
 
 ## Configuration
 
-Key configuration options:
+Settings can be configured via environment variables or `.env` file:
 
-```python
-config = {
-    'engine_config': {
-        'max_ar_order': 4,
-        'max_ma_order': 4,
-        'seasonal_period': 4
-    },
-    'selector_config': {
-        'max_iter': 50,
-        'cv_folds': 3
-    }
-}
-
-pipeline = SeasonalAdjustmentPipeline(config)
+```env
+FHFA_DATA_DIR=/path/to/data
+FHFA_OUTPUT_DIR=/path/to/output
+FHFA_LOG_LEVEL=INFO
+FHFA_N_JOBS=-1  # Use all CPU cores
 ```
 
-## Output Files
+## Limitations
 
-The model generates several output files:
+- X-13ARIMA integration requires external X-13 binary (not included)
+- Synthetic data generator for testing purposes only
+- Some advanced seasonal adjustment methods require additional dependencies
 
-- `adjusted_series.csv`: Original and seasonally adjusted indices
-- `seasonal_factors.csv`: Quarterly seasonal factors
-- `diagnostics.csv`: Model fit statistics and test results
-- `processing_summary.csv`: Overview of all processed geographies
+## Future Enhancements
 
-## Troubleshooting
-
-### Common Issues
-
-1. **Insufficient Data**: Minimum 20 observations required per geography
-2. **Convergence Warnings**: Try reducing max AR/MA orders
-3. **Memory Issues**: Reduce `n_jobs` for parallel processing
-
-### Debug Mode
-
-Enable detailed logging:
-```python
-import logging
-logging.basicConfig(level=logging.DEBUG)
-```
-
-## Contributing
-
-1. Ensure all tests pass before submitting changes
-2. Add tests for new functionality
-3. Follow existing code style and conventions
-4. Update documentation as needed
+- [ ] Full X-13ARIMA-SEATS integration
+- [ ] Real-time data streaming support
+- [ ] Interactive dashboard
+- [ ] Cloud deployment options
+- [ ] GPU acceleration for large datasets
 
 ## License
 
-[License details here]
-
-## References
-
-- X-13ARIMA-SEATS methodology
-- Federal Housing Finance Agency (FHFA) guidelines
-- Seasonal adjustment best practices
+This implementation is for demonstration purposes based on public FHFA methodology.

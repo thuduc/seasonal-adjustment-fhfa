@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  fhfa-pipeline:
+    build: .
+    image: fhfa-seasonal-adjustment:latest
+    container_name: fhfa-pipeline
+    environment:
+      - FHFA_ENV=development
+      - FHFA_LOG_LEVEL=INFO
+      - FHFA_PARALLEL_ENABLED=true
+      - FHFA_N_JOBS=-1
+    volumes:
+      # Mount local directories
+      - ./data:/app/data
+      - ./output:/app/output
+      - ./.cache:/app/.cache
+      - ./.metrics:/app/.metrics
+      # Mount config for easy updates
+      - ./config:/app/config
+      - ./.env:/app/.env:ro
+    command: python main.py --mode full --report
+    networks:
+      - fhfa-network
+    
+  # Optional: Jupyter notebook for interactive analysis
+  notebook:
+    build: .
+    image: fhfa-seasonal-adjustment:latest
+    container_name: fhfa-notebook
+    environment:
+      - FHFA_ENV=development
+    volumes:
+      - ./data:/app/data
+      - ./output:/app/output
+      - ./notebooks:/app/notebooks
+      - ./src:/app/src
+    ports:
+      - "8888:8888"
+    command: jupyter notebook --ip=0.0.0.0 --no-browser --allow-root
+    networks:
+      - fhfa-network
+      
+  # Optional: Monitoring dashboard
+  metrics-viewer:
+    image: grafana/grafana:latest
+    container_name: fhfa-metrics
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./monitoring/grafana:/etc/grafana/provisioning
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    networks:
+      - fhfa-network
+
+networks:
+  fhfa-network:
+    driver: bridge
+
+volumes:
+  grafana-storage:
